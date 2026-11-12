@@ -113,9 +113,18 @@ Feature-based models run fine on a laptop.
 
 ## The challenge
 
+> **The code here is a starting point, not a recipe.** The baselines, preprocessing and stubs exist
+> so you can get going on day one. They are not a standard, and nothing says they are the right way
+> to do it. Change them, replace them, or ignore them entirely. Use any library, model or approach
+> you think works better: self-supervised or contrastive representation learning, clustering,
+> foundation models, semi-supervised learning on the unlabelled NOC images, ensembles, new ways of
+> handling the imbalance or the unseen class, or ideas nobody has tried yet. Novel approaches are
+> very welcome. The only fixed parts are the data, the predictions format and the scoring.
+
 Suggested route through the four weeks. Take it in whatever direction your team finds interesting.
 
-**Week 1: explore.** Look at the images of each class. How imbalanced is it, really? How do the NOC
+**Week 1: explore.** Start with `notebooks/01_explore_data.ipynb` (`pip install -e ".[notebooks]"`,
+then `jupyter lab`). Look at the images of each class. How imbalanced is it, really? How do the NOC
 images differ from UVP6Net (sizes, backgrounds, features)? Run both baselines and read their
 per-class results: which classes fail, and why?
 
@@ -178,7 +187,9 @@ src/plankton/                 the Python package
   models.py                   CNN architectures, device selection
   imbalance.py                losses and samplers: implement your strategies here
   inference.py                prediction and checkpoints
+  viz.py                      image galleries
 scripts/                      download data, train baselines, predict, evaluate
+notebooks/01_explore_data.ipynb   week-1 exploration: imbalance, galleries, sizes, UVP6Net vs NOC
 tests/                        quick sanity checks (pytest)
 leaderboard/                  the leaderboard web app (organisers)
 data/, outputs/               created by the scripts, not tracked by git
@@ -193,9 +204,10 @@ data/, outputs/               created by the scripts, not tracked by git
   SEANOE. <https://doi.org/10.17882/101948>. Licence: **CC BY-NC 4.0** (non-commercial use, with attribution).
 * **NOC UVP6 test images**: National Oceanography Centre (2026), Zenodo,
   <https://zenodo.org/records/24160827>. Licence: CC BY 4.0.
-* Related work: Panaïotis et al. (2026), a benchmark of plankton image classifiers on UVP data,
-  *Earth System Science Data*, <https://doi.org/10.5194/essd-18-945-2026>; Masoudi et al. (2024),
-  combining imagery from different UVP generations, *IEEE JSTARS*.
+* Related work: Masoudi M., Giering S. L. C., Eftekhari N., Massot-Campos M., Irisson J.-O.,
+  Thornton B. (2024). *Optimizing plankton image classification with metadata-enhanced representation
+  learning.* IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 17,
+  17117–17133. <https://doi.org/10.1109/JSTARS.2024.3424498>
 
 The code in this repository is released under the [BSD 3-Clause licence](LICENSE).
 

@@ -9,7 +9,9 @@ compare:
     python scripts/train_cnn.py --loss focal --sampler none
     python scripts/train_cnn.py --loss ce --sampler balanced
 
-Each stub explains the idea and points to the original paper.
+Each stub explains the idea and points to the original paper. These are common
+starting points, not the full list: if you have a better or novel idea for
+handling the imbalance, add it here (or anywhere else) and compare it.
 """
 
 from __future__ import annotations
