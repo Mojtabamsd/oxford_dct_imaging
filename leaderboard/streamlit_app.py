@@ -18,7 +18,7 @@ try:
 except Exception:  # no secrets file (local test with CHALLENGE_LOCAL_DIR)  # noqa: BLE001
     pass
 
-from backend import COLUMNS, Challenge, SubmissionError  # noqa: E402
+from backend import COLUMNS, Challenge, ConfigError, SubmissionError  # noqa: E402
 
 st.set_page_config(page_title="Plankton challenge leaderboard", page_icon="🔬", layout="wide")
 
@@ -29,7 +29,11 @@ def get_challenge() -> Challenge:
     return Challenge.from_env()
 
 
-challenge = get_challenge()
+try:
+    challenge = get_challenge()
+except ConfigError as err:  # not cached, so fixing the secrets + reboot retries
+    st.error(f"The leaderboard is not configured correctly: {err}")
+    st.stop()
 
 st.title("Teaching machines to see plankton")
 st.caption("Upload your predictions on the NOC UVP6 test set and see how your model does on images "

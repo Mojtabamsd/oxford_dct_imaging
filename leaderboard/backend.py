@@ -57,6 +57,10 @@ LOG_COLUMNS = ["time", "team", *COLUMNS, "file"]
 
 # ---- storage ----------------------------------------------------------------------
 
+class ConfigError(RuntimeError):
+    """The app is misconfigured (secrets, token permissions); safe to show to the organiser."""
+
+
 class LocalStore:
     def __init__(self, root: Path):
         self.root = Path(root)
@@ -78,6 +82,24 @@ class HubStore:
     def __init__(self, repo_id: str, token: str | None):
         from huggingface_hub import HfApi
         self.api, self.repo_id = HfApi(token=token), repo_id
+        self.check_access(token)
+
+    def check_access(self, token: str | None) -> None:
+        """Fail early with a message that says what is misconfigured (never the token itself)."""
+        if not token:
+            raise ConfigError("HF_TOKEN is not set. Add it to the app's Secrets.")
+        try:
+            user = self.api.whoami()["name"]
+        except Exception as err:  # noqa: BLE001
+            raise ConfigError(f"HF_TOKEN was rejected by Hugging Face ({type(err).__name__}). "
+                              "Check it was copied in full, or create a new one.") from err
+        try:
+            self.api.repo_info(self.repo_id, repo_type="dataset")
+        except Exception as err:  # noqa: BLE001
+            raise ConfigError(
+                f"The token (user '{user}') cannot see the dataset '{self.repo_id}' ({type(err).__name__}). "
+                "Check DATA_REPO is spelled exactly right, and that the token has read and write "
+                "permission on that repository (fine-grained token -> Repositories permissions).") from err
 
     def read(self, name: str) -> bytes | None:
         from huggingface_hub.utils import EntryNotFoundError
@@ -96,10 +118,11 @@ class HubStore:
 def store_from_env():
     if os.environ.get("CHALLENGE_LOCAL_DIR"):
         return LocalStore(Path(os.environ["CHALLENGE_LOCAL_DIR"]))
-    repo = os.environ.get("DATA_REPO")
+    repo = os.environ.get("DATA_REPO", "").strip()
     if not repo:
-        raise RuntimeError("Set DATA_REPO (private HF dataset with the answer key) or CHALLENGE_LOCAL_DIR.")
-    return HubStore(repo, os.environ.get("HF_TOKEN"))
+        raise ConfigError("DATA_REPO is not set. Add it to the app's Secrets "
+                          '(e.g. DATA_REPO = "<user>/plankton-challenge-private").')
+    return HubStore(repo, os.environ.get("HF_TOKEN", "").strip() or None)
 
 
 # ---- challenge ----------------------------------------------------------------------
