@@ -25,6 +25,7 @@ Examples:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import secrets
 from datetime import datetime
@@ -92,11 +93,9 @@ def main() -> None:
 
     old = None
     if not args.new_team_codes:
-        try:
+        with contextlib.suppress(EntryNotFoundError):
             old = json.loads(Path(hf_hub_download(data_id, "teams.json", repo_type="dataset",
                                                   force_download=True)).read_text())
-        except EntryNotFoundError:
-            pass
     teams = merge_codes(names, old)
 
     files = {"answer_key.csv": key, "settings.json": settings.encode(),

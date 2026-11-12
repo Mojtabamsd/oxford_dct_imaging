@@ -69,7 +69,7 @@ with submit_tab:
                        f"Submissions left today: {result['remaining_today']}.")
             shown = [(heading, m.get(kind, {}).get(metric)) for col, (heading, (kind, metric)) in COLUMNS.items()]
             shown = [(h, v) for h, v in shown if v is not None]
-            for col, (heading, value) in zip(st.columns(len(shown)), shown):
+            for col, (heading, value) in zip(st.columns(len(shown)), shown, strict=True):
                 col.metric(heading, f"{value:.3f}")
             if challenge.settings["show_per_class"]:
                 st.subheader("Per-class results")

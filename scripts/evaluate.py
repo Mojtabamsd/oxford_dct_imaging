@@ -129,7 +129,7 @@ def clean_predictions(pred: pd.DataFrame, level: int, classes: pd.DataFrame) -> 
     pred = pred.copy()
     level1, level2 = set(classes["level1"]), set(classes["level2"])
     if level == 2:
-        to_level2 = dict(zip(classes["level1"], classes["level2"]))
+        to_level2 = dict(zip(classes["level1"], classes["level2"], strict=True))
         pred["label"] = [lab if lab in level2 else to_level2.get(lab, lab) for lab in pred["label"]]
         valid = level2 | {UNKNOWN}
     else:

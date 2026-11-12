@@ -155,7 +155,7 @@ class Challenge:
         self.log = pd.read_csv(io.BytesIO(log)) if log else pd.DataFrame(columns=LOG_COLUMNS)
 
     @classmethod
-    def from_env(cls) -> "Challenge":
+    def from_env(cls) -> Challenge:
         return cls(store_from_env())
 
     @property

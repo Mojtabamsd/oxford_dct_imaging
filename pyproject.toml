@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plankton-challenge"
+version = "0.1.0"
+description = "Starter code for the plankton image classification team challenge (UVP6Net -> NOC UVP6)"
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "scikit-learn>=1.4",
+    "pillow>=10.0",
+    "matplotlib>=3.8",
+    "tqdm>=4.66",
+    "joblib>=1.3",
+]
+
+[project.optional-dependencies]
+# Deep learning. For a GPU build of PyTorch, install torch first following
+# https://pytorch.org/get-started/locally/ and then `pip install -e ".[deep]"`.
+deep = ["torch>=2.2", "torchvision>=0.17"]
+notebooks = ["jupyterlab>=4.0"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

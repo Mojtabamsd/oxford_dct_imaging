@@ -134,12 +134,13 @@ def write_labels(data_dir: Path) -> None:
     src = data_dir / "UVP6Net" / "taxa.csv.gz"
     dst = data_dir / "labels.csv"
     cols = ["objid", "taxon_level1", "taxon_level2", "plankton", "set", "img_path"]
-    with gzip.open(src, "rt", newline="", encoding="utf-8") as fin, open(dst, "w", newline="", encoding="utf-8") as fout:
-        writer = csv.DictWriter(fout, fieldnames=cols, extrasaction="ignore")
-        writer.writeheader()
-        for row in csv.DictReader(fin):
-            row["img_path"] = safe_path(row["img_path"])
-            writer.writerow(row)
+    with gzip.open(src, "rt", newline="", encoding="utf-8") as fin:  # noqa: SIM117 - keep 3.9 syntax
+        with open(dst, "w", newline="", encoding="utf-8") as fout:
+            writer = csv.DictWriter(fout, fieldnames=cols, extrasaction="ignore")
+            writer.writeheader()
+            for row in csv.DictReader(fin):
+                row["img_path"] = safe_path(row["img_path"])
+                writer.writerow(row)
     print(f"  wrote {dst}")
 
 
@@ -180,6 +181,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    if sys.version_info < (3, 9):
+    if sys.version_info < (3, 9):  # noqa: UP036 - runs before the package (3.10+) is installed
         sys.exit("Python 3.9 or newer is required.")
     main()
