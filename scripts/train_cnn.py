@@ -111,10 +111,15 @@ def main() -> None:
 
     # ---- model -----------------------------------------------------------------
     model = build_model(args.arch, len(classes), pretrained=not args.no_pretrained).to(device)
-    criterion = make_loss(args.loss, class_counts(y_train, len(classes)))
+    criterion = make_loss(args.loss, class_counts(y_train, len(classes))).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
+    total_steps = args.epochs * len(train_loader)
+    if total_steps < 1:
+        raise ValueError("Training needs at least one batch and one epoch; reduce --batch-size or increase the training subset.")
+    # A one-step warmup has zero duration in OneCycleLR. Skip warmup for tiny runs.
+    pct_start = 0.1 if total_steps > 10 else 0.0
     scheduler = torch.optim.lr_scheduler.OneCycleLR(
-        optimizer, max_lr=args.lr, total_steps=args.epochs * len(train_loader), pct_start=0.1)
+        optimizer, max_lr=args.lr, total_steps=total_steps, pct_start=pct_start)
     scaler = torch.amp.GradScaler(enabled=amp)
     config = {**{k: (str(v) if isinstance(v, Path) else v) for k, v in vars(args).items()}, "device": str(device)}
 
@@ -137,6 +142,8 @@ def main() -> None:
         yt, yp = evaluate(model, valid_loader, device, amp)
         row = {"epoch": epoch, "train_loss": total / n,
                "valid_macro_f1": f1_score(yt, yp, average="macro"),
+               "valid_micro_f1": f1_score(yt, yp, average="micro"),
+               "valid_weighted_f1": f1_score(yt, yp, average="weighted"),
                "valid_balanced_accuracy": balanced_accuracy_score(yt, yp),
                "valid_accuracy": float(np.mean(yt == yp)), "seconds": round(time.time() - t0)}
         history.append(row)
@@ -146,12 +153,15 @@ def main() -> None:
             best_f1, flag = row["valid_macro_f1"], "  * best, saved"
             save_checkpoint(args.out_dir / "best.pt", model, classes, config)
         print(f"epoch {epoch:>2}: loss {row['train_loss']:.4f}  valid macro F1 {row['valid_macro_f1']:.4f}  "
+              f"micro F1 {row['valid_micro_f1']:.4f}  weighted F1 {row['valid_weighted_f1']:.4f}  "
               f"bal acc {row['valid_balanced_accuracy']:.4f}  acc {row['valid_accuracy']:.4f}  "
               f"({row['seconds']} s){flag}")
 
     # ---- predict with the best model ---------------------------------------------
     model.load_state_dict(torch.load(args.out_dir / "best.pt", map_location=device, weights_only=False)["state_dict"])
-    (args.out_dir / "config.json").write_text(json.dumps({**config, "best_valid_macro_f1": best_f1}, indent=2))
+    (args.out_dir / "config.json").write_text(json.dumps({**config, "best_valid_macro_f1": best_f1,
+                                                           "best_valid_micro_f1": max(r["valid_micro_f1"] for r in history),
+                                                           "best_valid_weighted_f1": max(r["valid_weighted_f1"] for r in history)}, indent=2))
     sets = {"uvp6net_test": load_uvp6net("test")}
     try:
         sets["noc"] = load_noc()
